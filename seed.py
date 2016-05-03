@@ -2,11 +2,13 @@
 
 from sqlalchemy import func
 from model import User
-# from model import Rating
-# from model import Movie
+from model import Rating
+from model import Movie
 
 from model import connect_to_db, db
 from server import app
+
+from datetime import datetime
 
 
 def load_users():
@@ -36,6 +38,44 @@ def load_users():
 
 def load_movies():
     """Load movies from u.item into database."""
+
+    print "Movies"
+
+    # Delete all rows in table, so if we need to run this a second time,
+    # we won't be trying to add duplicate users
+    User.query.delete()
+
+    # Read u.item file and insert data
+    for row in open("seed_data/u.item"):
+        row = row.rstrip()
+        row = row.split("|")
+        del row[3]
+        movie_id, title, released_str, imdb_url = row[:4]
+
+        # Removing year in movie title
+        title_with_date = title.split()
+        del title_with_date[-1]
+        title = " "
+        title = title.join(title_with_date)
+
+        # Turning released_at into a datetime object
+        if released_str:
+            released_at = datetime.strptime(released_str, "%d-%b-%Y")
+        else:
+            released_at = None
+
+        # setting variable movie as an instance of the movie class
+        movie = Movie(movie_id=movie_id,
+                    title=title,
+                    released_at=released_at,
+                    imdb_url=imdb_url)
+
+
+        # We need to add to the session or it won't ever be stored
+        db.session.add(movie)
+
+    # # Once we're done, we should commit our work
+    db.session.commit()
 
 
 def load_ratings():
