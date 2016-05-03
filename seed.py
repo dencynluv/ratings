@@ -77,9 +77,32 @@ def load_movies():
     # # Once we're done, we should commit our work
     db.session.commit()
 
-
+********
 def load_ratings():
     """Load ratings from u.data into database."""
+
+    print "Ratings"
+
+    # Delete all rows in table, so if we need to run this a second time,
+    # we won't be trying to add duplicate users
+    User.query.delete()
+
+    # Read u.user file and insert data
+    for row in open("seed_data/u.data"):
+        row = row.rstrip()
+        user_id, movie_id, score, timestamp = row.split(" ")
+
+
+        # rating = Rating(movie_id=movie_id,
+        #                 user_id=user_id,
+        #                 score=score)
+
+        # We need to add to the session or it won't ever be stored
+    #     db.session.add(rating)
+
+    # # Once we're done, we should commit our work
+    # db.session.commit()
+
 
 
 def set_val_user_id():
