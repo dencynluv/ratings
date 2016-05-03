@@ -25,6 +25,7 @@ def load_users():
         row = row.rstrip()
         user_id, age, gender, occupation, zipcode = row.split("|")
 
+        # passing in only the data we want to use
         user = User(user_id=user_id,
                     age=age,
                     zipcode=zipcode)
@@ -43,7 +44,7 @@ def load_movies():
 
     # Delete all rows in table, so if we need to run this a second time,
     # we won't be trying to add duplicate users
-    User.query.delete()
+    Movie.query.delete()
 
     # Read u.item file and insert data
     for row in open("seed_data/u.item"):
@@ -58,7 +59,7 @@ def load_movies():
         title = " "
         title = title.join(title_with_date)
 
-        # Turning released_at into a datetime object
+        # Turning released_str into a datetime object
         if released_str:
             released_at = datetime.strptime(released_str, "%d-%b-%Y")
         else:
@@ -77,7 +78,6 @@ def load_movies():
     # # Once we're done, we should commit our work
     db.session.commit()
 
-********
 def load_ratings():
     """Load ratings from u.data into database."""
 
@@ -85,24 +85,24 @@ def load_ratings():
 
     # Delete all rows in table, so if we need to run this a second time,
     # we won't be trying to add duplicate users
-    User.query.delete()
+    Rating.query.delete()
 
-    # Read u.user file and insert data
+    # Read u.data file and insert data
     for row in open("seed_data/u.data"):
         row = row.rstrip()
-        user_id, movie_id, score, timestamp = row.split(" ")
+        row = row.split("\t")
+        movie_id, user_id, score = row[:3]
 
-
-        # rating = Rating(movie_id=movie_id,
-        #                 user_id=user_id,
-        #                 score=score)
+        #Setting variable rating as an instance of the rating class
+        rating = Rating(movie_id=movie_id,
+                        user_id=user_id,
+                        score=score)
 
         # We need to add to the session or it won't ever be stored
-    #     db.session.add(rating)
+        db.session.add(rating)
 
     # # Once we're done, we should commit our work
-    # db.session.commit()
-
+    db.session.commit()
 
 
 def set_val_user_id():
@@ -110,7 +110,9 @@ def set_val_user_id():
 
     # Get the Max user_id in the database
     result = db.session.query(func.max(User.user_id)).one()
+    # At index 0 is your max id because ther is only one result with .one()
     max_id = int(result[0])
+
 
     # Set the value for the next user_id to be max_id + 1
     query = "SELECT setval('users_user_id_seq', :new_id)"
