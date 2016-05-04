@@ -93,29 +93,25 @@ def process_sign_in():
     email = request.form.get("email")
     password = request.form.get("password")
 
-    # Query for all user emails, passwords, and unique ids
-    # Return a list of user objects
-    users = db.session.query(User.email, User.password, User.user_id).all()
+    # Query for user whose email matches email above
+    # Return a user object
+    user = db.session.query(User).filter(User.email == email).one()
 
-    for user in users: 
-
-        if user.email == email and user.password == password:
-            #Log them in
-            session['current_user'] = user.id
-            break
-        else: 
-            flash("Login and/or password is incorrect! Try again.")
-            return redirect(url_for('user_sign_in'))
-
-    flash("Signed in as {}".format(user.email))
-    return redirect(url_for('index'))
+    if user.password == password:
+        #Log them in
+        session['current_user'] = user.user_id
+        flash("Signed in as {}".format(user.email))
+        return redirect(url_for('index'))
+    
+    flash("Login and/or password is incorrect! Try again.")
+    return redirect(url_for('user_sign_in'))
 
 
 @app.route("/sign-out")
 def user_sign_out():
     """Allow user to sign out."""
 
-    session['current_user'] = None
+    del session['current_user'] 
     flash("You have successfully logged out.")
 
     return redirect(url_for('index'))
