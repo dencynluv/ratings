@@ -2,7 +2,7 @@
 
 from jinja2 import StrictUndefined
 
-from flask import Flask, render_template, redirect, request, flash, session
+from flask import Flask, render_template, redirect, request, flash, session, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 
 from model import User, Rating, Movie, connect_to_db, db
@@ -34,14 +34,16 @@ def user_list():
     return render_template("user_list.html", users=users)
 
 # Add sign in route 
-@app.route("/sign-in")
-def user_sign_in():
-    """Allow user to sign in."""
+# @app.route("/sign-in")
+# def user_sign_in():
+#     """Allow user to sign in."""
 
-    return render_template("sign_in.html")
+#     return render_template("sign_in.html")
 
+
+# Add sign up route 
 @app.route("/sign-up")
-def user_sign_in():
+def user_sign_up():
     """Allow user to sign up."""
 
     return render_template("sign_up.html")
@@ -71,7 +73,10 @@ def add_new_user():
 
     # Once we're done, we should commit our work
     db.session.commit()
-    
+
+    flash('You were successfully logged in')
+    return redirect(url_for('index'))
+
 
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the point
