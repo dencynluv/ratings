@@ -40,6 +40,12 @@ def user_sign_in():
 
     return render_template("sign_in.html")
 
+@app.route("/sign-up")
+def user_sign_in():
+    """Allow user to sign up."""
+
+    return render_template("sign_up.html")
+
 @app.route("/new-user", methods=["POST"])
 def add_new_user():
     """Add new user to database."""
