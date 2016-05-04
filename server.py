@@ -7,6 +7,8 @@ from flask_debugtoolbar import DebugToolbarExtension
 
 from model import User, Rating, Movie, connect_to_db, db
 
+import seed
+
 app = Flask(__name__)
 
 # Required to use Flask sessions and the debug toolbar
@@ -32,13 +34,38 @@ def user_list():
     return render_template("user_list.html", users=users)
 
 # Add sign in route 
-@app.route("/")
-def user_list():
-    """Show list of users."""
+@app.route("/sign-in")
+def user_sign_in():
+    """Allow user to sign in."""
 
-    users = User.query.all()
-    return render_template("~.html", users=users)
+    return render_template("sign_in.html")
 
+@app.route("/new-user", methods=["POST"])
+def add_new_user():
+    """Add new user to database."""
+
+    # Process sign-in form and set to respective variables
+    email = request.form.get("email")
+    password = request.form.get("password")
+
+    # check if user name exists
+    user_emails = db.session.query(User.email).all() #list of user objects
+
+    user_id = seed.set_val_user_id()
+
+    # if user does not exist add user to database
+    for item in user_emails:
+        if item.email == email:
+            continue
+        else: 
+            user = User(user_id=user_id, email=email, password=password)
+
+    # We need to add to the session or it won't ever be stored
+    db.session.add(user)
+
+    # Once we're done, we should commit our work
+    db.session.commit()
+    
 
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the point
