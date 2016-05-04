@@ -33,13 +33,6 @@ def user_list():
     users = User.query.all()
     return render_template("user_list.html", users=users)
 
-# Add sign in route 
-# @app.route("/sign-in")
-# def user_sign_in():
-#     """Allow user to sign in."""
-
-#     return render_template("sign_in.html")
-
 
 # Add sign up route 
 @app.route("/sign-up")
@@ -48,33 +41,83 @@ def user_sign_up():
 
     return render_template("sign_up.html")
 
+
 @app.route("/new-user", methods=["POST"])
 def add_new_user():
     """Add new user to database."""
 
-    # Process sign-in form and set to respective variables
+    # Process sign-up form and set to respective variables
     email = request.form.get("email")
     password = request.form.get("password")
 
     # check if user name exists
     user_emails = db.session.query(User.email).all() #list of user objects
 
+    # calling function set_val_user_id() from seed.py file
+    # to prevent conflicting id's
     user_id = seed.set_val_user_id()
 
     # if user does not exist add user to database
     for item in user_emails:
+
         if item.email == email:
-            continue
+            break
         else: 
             user = User(user_id=user_id, email=email, password=password)
 
-    # We need to add to the session or it won't ever be stored
-    db.session.add(user)
 
-    # Once we're done, we should commit our work
-    db.session.commit()
+    if user:
+        # We need to add to the session or it won't be stored
+        db.session.add(user)
 
-    flash('You were successfully logged in')
+        # Once we're done, we should commit our work
+        db.session.commit()
+        
+        flash('You were successfully signed up')
+
+    return redirect(url_for('index'))
+
+# Add sign in route 
+@app.route("/sign-in")
+def user_sign_in():
+    """Allow user to sign in."""
+
+    return render_template("sign_in.html")
+
+
+@app.route("/process-sign-in", methods=["POST"])
+def process_sign_in():
+    """Process username and password."""
+
+    # Process sign-in form and set to respective variables
+    email = request.form.get("email")
+    password = request.form.get("password")
+
+    # Query for all user emails, passwords, and unique ids
+    # Return a list of user objects
+    users = db.session.query(User.email, User.password, User.user_id).all()
+
+    for user in users: 
+
+        if user.email == email and user.password == password:
+            #Log them in
+            session['current_user'] = user.id
+            break
+        else: 
+            flash("Login and/or password is incorrect! Try again.")
+            return redirect(url_for('user_sign_in'))
+
+    flash("Signed in as {}".format(user.email))
+    return redirect(url_for('index'))
+
+
+@app.route("/sign-out")
+def user_sign_out():
+    """Allow user to sign out."""
+
+    session['current_user'] = None
+    flash("You have successfully logged out.")
+
     return redirect(url_for('index'))
 
 
