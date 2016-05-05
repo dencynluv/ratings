@@ -133,7 +133,40 @@ def user_sign_out():
 
     return redirect('/')
 
+@app.route("/profile/<int:user_id>")
+def show_profile(user_id):
+    """Show user profile."""
+    # Flask is grabbing user_id from the URL route
+    # and passing it as an argument to our show_profile function 
 
+    #List of rating objects 
+    
+    user_ratings = db.session.query(Rating).filter(Rating.user_id == user_id).all()
+
+
+    movies = []
+    ratings = []
+
+    #TO DO: Zip movies and ratings list together to create movie/rating list
+
+    for rating in user_ratings:
+
+        age = rating.user.age
+        zipcode = rating.user.zipcode
+        movie_title = rating.movie.title
+        score = rating.score
+
+        movies.append(movie_title)
+        ratings.append(score)
+
+    print movies
+
+    raise Exception("hi")
+    return render_template("profile.html",
+                            age=age,
+                            zipcode=zipcode,
+                            movies=movies,
+                            ratings=ratings)
 
 
 if __name__ == "__main__":
