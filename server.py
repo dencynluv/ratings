@@ -23,7 +23,12 @@ app.jinja_env.undefined = StrictUndefined
 def index():
     """Homepage."""
 
-    return render_template("homepage.html")
+    if session:
+        current_session = session['current_user']
+    else: 
+        current_session = None
+
+    return render_template("homepage.html", session=current_session)
 
 
 @app.route("/users")
@@ -50,28 +55,30 @@ def add_new_user():
     email = request.form.get("email")
     password = request.form.get("password")
 
-    # check if user name exists
+    # Check if user exists in database and return user object
     user = db.session.query(User).filter(User.email == email).first()
 
-    # if user does not exist add user to database
-
+    # Want to check if user is a user object
+    # If user is None, go into else statement
     if user:
         if user.email == email:
             flash("you already logged in before silly willy")
             pass
     else: 
-        # calling function set_val_user_id() from seed.py file
+        # Calling function set_val_user_id() from seed.py fil
         # to prevent conflicting id's
         user_id = seed.set_val_user_id()
 
+        # Instantiating user in the User class
         user = User(user_id=user_id, email=email, password=password)
 
-        # We need to add to the session or it won't be stored
+        # We need to add to the transaction or it won't be stored
         db.session.add(user)
 
         # Once we're done, we should commit our work
         db.session.commit()
         
+        # To keep user logged in, holding onto user_id in a flask session
         session['current_user'] = user.user_id
         flash('You were successfully signed up')
 
@@ -97,16 +104,19 @@ def process_sign_in():
     # Return a user object
     user = db.session.query(User).filter(User.email == email).one()
 
+    # Want to check if user is a user object
+    # If user is None, go into else statement
     if user:
         if user.password == password:
-            #Log them in
+            #Keep user logged in by setting session key to user_id
             session['current_user'] = user.user_id
             flash("Signed in as {}".format(user.email))
             return redirect('/')
     else:
         flash("You don't exist!")
         redirect('/sign-up')
-        
+    
+    #If user's information is incorrect, flash message and redirect to sign-in
     flash("Login and/or password is incorrect! Try again.")
     return redirect('/sign-in')
 
@@ -115,10 +125,15 @@ def process_sign_in():
 def user_sign_out():
     """Allow user to sign out."""
 
-    del session['current_user'] 
-    flash("You have successfully logged out.")
+    if session['current_user']:
+        del session['current_user'] 
+        flash("You have successfully logged out.")
+    else:
+        flash("You were not logged in")
 
     return redirect('/')
+
+
 
 
 if __name__ == "__main__":
