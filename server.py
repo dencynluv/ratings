@@ -2,7 +2,7 @@
 
 from jinja2 import StrictUndefined
 
-from flask import Flask, render_template, redirect, request, flash, session, url_for
+from flask import Flask, render_template, redirect, request, flash, session
 from flask_debugtoolbar import DebugToolbarExtension
 
 from model import User, Rating, Movie, connect_to_db, db
@@ -51,31 +51,31 @@ def add_new_user():
     password = request.form.get("password")
 
     # check if user name exists
-    user_emails = db.session.query(User.email).all() #list of user objects
-
-    # calling function set_val_user_id() from seed.py file
-    # to prevent conflicting id's
-    user_id = seed.set_val_user_id()
+    user = db.session.query(User).filter(User.email == email).first()
 
     # if user does not exist add user to database
-    for item in user_emails:
-
-        if item.email == email:
-            break
-        else: 
-            user = User(user_id=user_id, email=email, password=password)
-
 
     if user:
+        if user.email == email:
+            flash("you already logged in before silly willy")
+            pass
+    else: 
+        # calling function set_val_user_id() from seed.py file
+        # to prevent conflicting id's
+        user_id = seed.set_val_user_id()
+
+        user = User(user_id=user_id, email=email, password=password)
+
         # We need to add to the session or it won't be stored
         db.session.add(user)
 
         # Once we're done, we should commit our work
         db.session.commit()
         
+        session['current_user'] = user.user_id
         flash('You were successfully signed up')
 
-    return redirect(url_for('index'))
+    return redirect('/')
 
 # Add sign in route 
 @app.route("/sign-in")
@@ -97,14 +97,18 @@ def process_sign_in():
     # Return a user object
     user = db.session.query(User).filter(User.email == email).one()
 
-    if user.password == password:
-        #Log them in
-        session['current_user'] = user.user_id
-        flash("Signed in as {}".format(user.email))
-        return redirect(url_for('index'))
-    
+    if user:
+        if user.password == password:
+            #Log them in
+            session['current_user'] = user.user_id
+            flash("Signed in as {}".format(user.email))
+            return redirect('/')
+    else:
+        flash("You don't exist!")
+        redirect('/sign-up')
+        
     flash("Login and/or password is incorrect! Try again.")
-    return redirect(url_for('user_sign_in'))
+    return redirect('/sign-in')
 
 
 @app.route("/sign-out")
@@ -114,7 +118,7 @@ def user_sign_out():
     del session['current_user'] 
     flash("You have successfully logged out.")
 
-    return redirect(url_for('index'))
+    return redirect('/')
 
 
 if __name__ == "__main__":
