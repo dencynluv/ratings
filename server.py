@@ -23,10 +23,14 @@ app.jinja_env.undefined = StrictUndefined
 def index():
     """Homepage."""
 
-    if session:
-        current_session = session['current_user']
-    else: 
-        current_session = None
+    # raise Exception('Y')
+
+    # if 'current_user' in session:
+    #     current_session = session['current_user']
+    # else: 
+    #     current_session = None
+
+    current_session = session.get('current_user', None)
 
     return render_template("homepage.html", session=current_session)
 
@@ -84,6 +88,7 @@ def add_new_user():
 
     return redirect('/')
 
+
 # Add sign in route 
 @app.route("/sign-in")
 def user_sign_in():
@@ -111,7 +116,7 @@ def process_sign_in():
             #Keep user logged in by setting session key to user_id
             session['current_user'] = user.user_id
             flash("Signed in as {}".format(user.email))
-            return redirect('/')
+            return redirect('/profile/' + str(user.user_id))
     else:
         flash("You don't exist!")
         redirect('/sign-up')
@@ -126,12 +131,13 @@ def user_sign_out():
     """Allow user to sign out."""
 
     if session['current_user']:
-        del session['current_user'] 
+        del session['current_user']
         flash("You have successfully logged out.")
     else:
         flash("You were not logged in")
 
     return redirect('/')
+
 
 @app.route("/profile/<int:user_id>")
 def show_profile(user_id):
@@ -140,33 +146,28 @@ def show_profile(user_id):
     # and passing it as an argument to our show_profile function 
 
     #List of rating objects 
-    
     user_ratings = db.session.query(Rating).filter(Rating.user_id == user_id).all()
 
+    movie_ratings = []
 
-    movies = []
-    ratings = []
+    if user_ratings:
+        # Calling the user class on the rating object to get the age attribute
+        age = user_ratings[0].user.age
+        zipcode = user_ratings[0].user.zipcode
 
-    #TO DO: Zip movies and ratings list together to create movie/rating list
+        for rating in user_ratings:
+            movie_title = rating.movie.title
+            score = rating.score
 
-    for rating in user_ratings:
+            # Making tuples appending to a list
+            movie_ratings.append((movie_title, score))
+    else: 
+        return redirect('/')
 
-        age = rating.user.age
-        zipcode = rating.user.zipcode
-        movie_title = rating.movie.title
-        score = rating.score
-
-        movies.append(movie_title)
-        ratings.append(score)
-
-    print movies
-
-    raise Exception("hi")
     return render_template("profile.html",
                             age=age,
                             zipcode=zipcode,
-                            movies=movies,
-                            ratings=ratings)
+                            movie_ratings=movie_ratings)
 
 
 if __name__ == "__main__":

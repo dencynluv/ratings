@@ -91,7 +91,7 @@ def load_ratings():
     for row in open("seed_data/u.data"):
         row = row.rstrip()
         row = row.split("\t")
-        movie_id, user_id, score = row[:3]
+        user_id, movie_id, score = row[:3]
 
         #Setting variable rating as an instance of the rating class
         rating = Rating(movie_id=movie_id,

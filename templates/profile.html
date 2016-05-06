@@ -3,6 +3,25 @@
 
     <h2>Profile</h2>
 
+    <label>Age: {{ age }}
+    </label>
+    <br>
+    <label>Zipcode: {{ zipcode }}
+    </label>
+    <br>
+    <label>Ratings 
+      {% if movie_ratings %}
+        <ul>
+        {% for rating in movie_ratings %}
+          <li>
+            {{ rating[0] }}: {{ rating[1] }}
+          </li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    </label>
+    <br>
+    <a href="/">Back to Homepage</a>
   
 
 {% endblock %}
